@@ -13,7 +13,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-
+// TEST!!!!!!!!!!!!!
 
 // Register Identity with roles
 builder.Services
