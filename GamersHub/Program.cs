@@ -26,6 +26,14 @@ builder.Services
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Only send over HTTPS
+    options.Cookie.SameSite = SameSiteMode.Lax; // Allows auth cookies to work with redirects
+    options.SlidingExpiration = true;
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -43,6 +51,12 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseCookiePolicy(new CookiePolicyOptions
+{
+    MinimumSameSitePolicy = SameSiteMode.Lax,
+    Secure = CookieSecurePolicy.Always
+});
 
 app.UseRouting();
 
