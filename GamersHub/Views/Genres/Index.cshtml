@@ -1,10 +1,10 @@
 ﻿@model IEnumerable<GamersHub.Models.Genre>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = nameof(GamersHub.Models.Genre);
 }
 
-<h1>Index</h1>
+<h1>@nameof(GamersHub.Models.Genre)</h1>
 
 <p>
     <a asp-action="Create">Create New</a>
