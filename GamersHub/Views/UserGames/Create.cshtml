@@ -1,0 +1,45 @@
+﻿@model GamersHub.Models.UserGame
+
+@{
+    ViewData["Title"] = "Add Game to Your Library";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="GameId" class="form-label"></label>
+                <select asp-for="GameId" class="form-select" asp-items="ViewBag.GameId">
+                    <option value="">-- Select Game --</option>
+                </select>
+                <span asp-validation-for="GameId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Status" class="form-label"></label>
+                <select asp-for="Status" class="form-select">
+                    <option value="">-- Select Status --</option>
+                    <option>Playing</option>
+                    <option>Completed</option>
+                    <option>Plan to Play</option>
+                    <option>Dropped</option>
+                </select>
+                <span asp-validation-for="Status" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Add to Library</button>
+            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
