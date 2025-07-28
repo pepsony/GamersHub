@@ -50,39 +50,44 @@ namespace GamersHub.Data
 
 
             // Optional: Seed a demo game
-            var genre = await context.Genres.FirstOrDefaultAsync(g => g.Name == "RPG");
-
-            if (genre != null)
+            if (!context.Games.Any())
             {
-                var game = new Game
+
+                var genre = await context.Genres.FirstOrDefaultAsync(g => g.Name == "RPG");
+
+                if (genre != null)
                 {
-                    Title = "Elder Scrolls VI",
-                    GenreId = genre.Id,
-                    ReleaseDate = new DateTime(2026, 1, 1)
-
-                    //ReleaseDate = new DateTime()
-                };
-
-                context.Games.Add(game);
-                await context.SaveChangesAsync();
-
-                // Add platforms for the game
-                var platforms = await context.Platforms.ToListAsync();
-                foreach (var p in platforms)
-                {
-                    context.GamePlatforms.Add(new GamePlatform
+                    var game = new Game
                     {
-                        GameId = (int)game.Id,
-                        PlatformId = p.Id
-                    });
-                }
+                        Title = "Elder Scrolls VI",
+                        GenreId = genre.Id,
+                        ReleaseDate = new DateTime(2026, 1, 1)
+                                        
+                    };
 
-                await context.SaveChangesAsync();
+                    context.Games.Add(game);
+                    await context.SaveChangesAsync();
+
+                    // Add platforms for the game
+                    var platforms = await context.Platforms.ToListAsync();
+                    foreach (var p in platforms)
+                    {
+                        context.GamePlatforms.Add(new GamePlatform
+                        {
+                            GameId = (int)game.Id,
+                            PlatformId = p.Id
+                        });
+                    }
+
+                    await context.SaveChangesAsync();
+
+                }
+                else
+                {
+                    Console.WriteLine("Genre 'RPG' not found — skipping game seeding.");
+                }
             }
-            else
-            {
-                Console.WriteLine("Genre 'RPG' not found — skipping game seeding.");
-            }
+
         }
     }
 }
