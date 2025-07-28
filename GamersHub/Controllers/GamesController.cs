@@ -65,7 +65,7 @@ namespace GamersHub.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Id", game.GenreId);
+            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Name", game.GenreId);
             return View(game);
         }
 
@@ -82,7 +82,7 @@ namespace GamersHub.Controllers
             {
                 return NotFound();
             }
-            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Id", game.GenreId);
+            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Name", game.GenreId);
             return View(game);
         }
 
@@ -118,7 +118,7 @@ namespace GamersHub.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Id", game.GenreId);
+            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Name", game.GenreId);
             return View(game);
         }
 
