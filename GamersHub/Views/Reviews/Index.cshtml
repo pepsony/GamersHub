@@ -46,7 +46,8 @@
                 @Html.DisplayFor(modelItem => item.Rating)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
+@*                 @Html.DisplayFor(modelItem => item.CreatedAt) *@
+                    @item.CreatedAt.ToString("yyyy-MM-dd")
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |

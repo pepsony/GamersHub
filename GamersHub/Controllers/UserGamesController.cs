@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using GamersHub.Data;
 using GamersHub.Models;
+using GamersHub.DTOs;
 
 namespace GamersHub.Controllers
 {
@@ -67,7 +68,7 @@ namespace GamersHub.Controllers
         // POST: UserGames/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("GameId,Status")] UserGame userGame)
+        public async Task<IActionResult> Create([Bind("GameId,Status")] CreateUserGame userGame)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -77,12 +78,19 @@ namespace GamersHub.Controllers
                 .AnyAsync(ug => ug.UserId == user.Id && ug.GameId == userGame.GameId);
 
             if (alreadyExists)
-                ModelState.AddModelError("", "This game is already in your library.");
-
+                ModelState.AddModelError("", "This game is already in your library.");  
+            
             if (ModelState.IsValid)
             {
-                userGame.UserId = user.Id;
-                _context.Add(userGame);
+                var userGameEntity = new UserGame()
+                {
+                    UserId = user.Id,
+                    GameId = userGame.GameId,
+                    Status = userGame.Status
+                };
+
+                _context.Add(userGameEntity);
+          
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
