@@ -23,7 +23,8 @@ namespace GamersHub.Controllers
 
         // GET: Reviews
         public async Task<IActionResult> Index()
-        {
+        {   
+
             var reviews = _context.Reviews
                 .Include(r => r.Game)
                 .Include(r => r.User);
@@ -97,44 +98,70 @@ namespace GamersHub.Controllers
         {
             if (id == null) return NotFound();
 
-            var review = await _context.Reviews.FindAsync(id);
+            var review = await _context.Reviews
+                .Include(r => r.User)
+                .Include(r => r.Game)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
             if (review == null) return NotFound();
 
-            ViewData["GameId"] = new SelectList(_context.Games, "Id", "Title", review.GameId);
+            // No longer need these selectLists for our read-only fields
+            //ViewData["GameId"] = new SelectList(_context.Games, "Id", "Title", review.GameId);
+            //ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", review.UserId);
+            
             return View(review);
         }
+
+       
 
         // POST: Reviews/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,GameId,Content,Rating")] Review review)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,GameId,Content,Rating,CreatedAt")] Review review)
         {
-            if (!ReviewExists(id)) return NotFound();
-
-            var existingReview = await _context.Reviews.FindAsync(id);
-            if (existingReview == null) return NotFound();
-
-            if (ModelState.IsValid)
+            if (id != review.Id)
             {
-                try
-                {
-                    existingReview.Content = review.Content;
-                    existingReview.Rating = review.Rating;
-
-                    _context.Update(existingReview);
-                    await _context.SaveChangesAsync();
-
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ReviewExists(review.Id)) return NotFound();
-                    else throw;
-                }
+                return NotFound();
             }
 
-            ViewData["GameId"] = new SelectList(_context.Games, "Id", "Title", review.GameId);
-            return View(review);
+            if (!ModelState.IsValid)
+            {
+                ViewData["GameId"] = new SelectList(_context.Games, "Id", "Title", review.GameId);
+                ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", review.UserId);
+                return View(review);
+            }
+
+            try
+            {
+                var existingReview = await _context.Reviews.FindAsync(id);
+                if (existingReview == null)
+                {
+                    return NotFound();
+                }
+
+                // Update all relevant properties
+                existingReview.UserId = review.UserId;
+                existingReview.GameId = review.GameId;
+                existingReview.Content = review.Content;
+                existingReview.Rating = review.Rating;
+                existingReview.CreatedAt = review.CreatedAt;
+
+                _context.Update(existingReview);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ReviewExists(review.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
 
         // GET: Reviews/Delete/5
