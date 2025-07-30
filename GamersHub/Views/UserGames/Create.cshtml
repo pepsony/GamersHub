@@ -19,7 +19,12 @@
                 <span asp-validation-for="GameId" class="text-danger"></span>
             </div>
 
-            <div class="form-group mb-3">
+            <div class="form-group">
+                <label asp-for="Status" class="control-label"></label>
+                <select asp-for="Status" class="form-control" asp-items="ViewBag.StatusList"></select>
+                <span asp-validation-for="Status" class="text-danger"></span>
+            </div>
+           @*  <div class="form-group mb-3">
                 <label asp-for="Status" class="form-label"></label>
                 <select asp-for="Status" class="form-select">
                     <option value="">-- Select Status --</option>
@@ -28,7 +33,7 @@
                     <option>Wishlist</option>
                 </select>
                 <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
+            </div> *@
 
             <button type="submit" class="btn btn-primary">Add Game</button>
             <a asp-action="Index" class="btn btn-secondary">Back to List</a>

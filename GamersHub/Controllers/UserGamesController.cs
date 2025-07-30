@@ -22,6 +22,12 @@ namespace GamersHub.Controllers
             _userManager = userManager;
         }
 
+        private SelectList GetStatusSelectList(string selected = "n/a")
+        {
+            var statuses = new[] { "Playing", "Completed", "Wishlist", "Dropped", "On Hold" };
+            return new SelectList(statuses, selected);
+        }
+
         // GET: UserGames
         public async Task<IActionResult> Index()
         {
@@ -62,6 +68,8 @@ namespace GamersHub.Controllers
         public IActionResult Create()
         {
             ViewData["GameId"] = new SelectList(_context.Games, "Id", "Title");
+            ViewBag.StatusList = GetStatusSelectList();
+
             return View();
         }
 
@@ -94,8 +102,9 @@ namespace GamersHub.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-
+            
             ViewData["GameId"] = new SelectList(_context.Games, "Id", "Title", userGame.GameId);
+            ViewBag.StatusList = GetStatusSelectList(userGame.Status);
             return View(userGame);
         }
 
@@ -110,12 +119,16 @@ namespace GamersHub.Controllers
                 return Challenge();
 
             var userGame = await _context.UserGames
+                .Include(ug => ug.User)
+                .Include(ug => ug.Game)            
                 .FirstOrDefaultAsync(ug => ug.Id == id && ug.UserId == user.Id);
+
+            ViewBag.StatusList = GetStatusSelectList(userGame.Status);
+            
 
             if (userGame == null)
                 return NotFound();
 
-            ViewData["GameId"] = new SelectList(_context.Games, "Id", "Title", userGame.GameId);
             return View(userGame);
         }
 
@@ -154,6 +167,7 @@ namespace GamersHub.Controllers
             }
 
             ViewData["GameId"] = new SelectList(_context.Games, "Id", "Title", userGame.GameId);
+            ViewBag.StatusList = GetStatusSelectList(userGame.Status);
             return View(userGame);
         }
 
