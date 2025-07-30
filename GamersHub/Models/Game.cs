@@ -6,6 +6,8 @@
         public string? Title {  get; set; }
         public DateTime? ReleaseDate { get; set; }
 
+        public string? ImagePath { get; set; }
+
         public int? GenreId { get; set; }
         public Genre? Genre { get; set; }
 

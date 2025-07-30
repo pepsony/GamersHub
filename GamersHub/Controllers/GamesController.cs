@@ -57,17 +57,34 @@ namespace GamersHub.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,ReleaseDate,GenreId")] Game game)
+        public async Task<IActionResult> Create([Bind("Id,Title,ReleaseDate,GenreId")] Game game, IFormFile? ImageFile)
         {
             if (ModelState.IsValid)
             {
+                if (ImageFile != null && ImageFile.Length > 0)
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(ImageFile.FileName);
+                    var extension = Path.GetExtension(ImageFile.FileName);
+                    var newFileName = $"{fileName}_{Guid.NewGuid()}{extension}";
+                    var path = Path.Combine("wwwroot/images/games", newFileName);
+
+                    using (var stream = new FileStream(path, FileMode.Create))
+                    {
+                        await ImageFile.CopyToAsync(stream);
+                    }
+
+                    game.ImagePath = $"/images/games/{newFileName}";
+                }
+
                 _context.Add(game);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
             ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Name", game.GenreId);
             return View(game);
         }
+
 
         // GET: Games/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -91,9 +108,15 @@ namespace GamersHub.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,ReleaseDate,GenreId")] Game game)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,ReleaseDate,GenreId")] Game game, IFormFile? ImageFile)
         {
             if (id != game.Id)
+            {
+                return NotFound();
+            }
+
+            var gameToUpdate = await _context.Games.FindAsync(id);
+            if (gameToUpdate == null)
             {
                 return NotFound();
             }
@@ -102,7 +125,26 @@ namespace GamersHub.Controllers
             {
                 try
                 {
-                    _context.Update(game);
+                    gameToUpdate.Title = game.Title;
+                    gameToUpdate.ReleaseDate = game.ReleaseDate;
+                    gameToUpdate.GenreId = game.GenreId;
+
+                    if (ImageFile != null && ImageFile.Length > 0)
+                    {
+                        var fileName = Path.GetFileNameWithoutExtension(ImageFile.FileName);
+                        var extension = Path.GetExtension(ImageFile.FileName);
+                        var newFileName = $"{fileName}_{Guid.NewGuid()}{extension}";
+                        var path = Path.Combine("wwwroot/images/games", newFileName);
+
+                        using (var stream = new FileStream(path, FileMode.Create))
+                        {
+                            await ImageFile.CopyToAsync(stream);
+                        }
+
+                        gameToUpdate.ImagePath = $"/images/games/{newFileName}";
+                    }
+
+                    _context.Update(gameToUpdate);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -118,6 +160,7 @@ namespace GamersHub.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+
             ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Name", game.GenreId);
             return View(game);
         }

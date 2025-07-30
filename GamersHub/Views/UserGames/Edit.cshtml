@@ -10,21 +10,20 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form asp-action="Edit" method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
-           
-            
+            <input type="hidden" asp-for="GameId" />
+            <input type="hidden" asp-for="UserId" />
+
             <div class="form-group">
                 <label>User</label>
                 <input class="form-control" value="@Model.User?.UserName" readonly />
-                <input type="hidden" asp-for="UserId" />
             </div>
 
             <div class="form-group">
                 <label>Game</label>
                 <input class="form-control" value="@Model.Game?.Title" readonly />
-                <input type="hidden" asp-for="GameId" />
             </div>
 
             <div class="form-group">
@@ -42,5 +41,7 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
