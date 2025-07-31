@@ -10,6 +10,21 @@
 <div>
     <h4>Game</h4>
     <hr />
+
+    @* Display image if available *@
+    @if (!string.IsNullOrEmpty(Model.ImagePath))
+    {
+        <div class="mb-3">
+            <img src="@Model.ImagePath"
+                 alt="@Model.Title"
+                 style="max-width: 300px; height: auto; border-radius: 8px;" />
+        </div>
+    }
+    else
+    {
+        <div class="mb-3 text-muted">No image available.</div>
+    }
+
     <dl class="row">
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Title)
