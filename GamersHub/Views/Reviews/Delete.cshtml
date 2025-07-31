@@ -23,6 +23,21 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Game.Title)
         </dd>
+
+        <dt class="col-sm-2">
+            Game Image
+        </dt>
+        <dd class="col-sm-10">
+            @if (!string.IsNullOrEmpty(Model.Game?.ImagePath))
+            {
+                <img src="@Model.Game.ImagePath" alt="Game Image" style="max-width: 300px; height: auto; border-radius: 8px;" />
+            }
+            else
+            {
+                <span>No image available</span>
+            }
+        </dd>
+
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Content)
         </dt>
