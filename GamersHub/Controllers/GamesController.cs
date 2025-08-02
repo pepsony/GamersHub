@@ -17,13 +17,24 @@ namespace GamersHub.Controllers
         public GamesController(ApplicationDbContext context)
         {
             _context = context;
-        }
+        }           
 
         // GET: Games
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? searchString)
         {
-            var applicationDbContext = _context.Games.Include(g => g.Genre);
-            return View(await applicationDbContext.ToListAsync());
+            ViewData["CurrentFilter"] = searchString;
+
+            var gamesQuery = _context.Games
+                .Include(g => g.Genre)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                gamesQuery = gamesQuery.Where(g => g.Title.Contains(searchString));
+            }
+
+            var games = await gamesQuery.ToListAsync();
+            return View(games);
         }
 
         // GET: Games/Details/5

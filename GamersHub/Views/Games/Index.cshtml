@@ -1,48 +1,52 @@
 ﻿@model IEnumerable<GamersHub.Models.Game>
 
 @{
-    ViewData["Title"] = nameof(GamersHub.Models.Game);
+    ViewData["Title"] = "Games";
 }
 
-<h1>@ViewData["Title"]</h1>
+<h1>Games</h1>
+
+<form asp-action="Index" method="get" class="mb-4">
+    <div class="input-group">
+        <input type="text" name="searchString" value="@Context.Request.Query["searchString"]"
+               class="form-control" placeholder="Search games by title..." />
+        <button type="submit" class="btn btn-outline-secondary">Search</button>
+    </div>
+</form>
 
 <p>
-    <a asp-action="Create" class="btn btn-primary">Create New</a>
+    <a asp-action="Create" class="btn btn-primary mb-3">Create New</a>
 </p>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Image</th>
-            <th>@Html.DisplayNameFor(model => model.Title)</th>
-            <th>@Html.DisplayNameFor(model => model.ReleaseDate)</th>
-            <th>@Html.DisplayNameFor(model => model.Genre)</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>
-                    @if (!string.IsNullOrEmpty(item.ImagePath))
-                    {
-                        <img src="@item.ImagePath" alt="@item.Title" width="80" height="80" style="object-fit: cover;" />
-                    }
-                    else
-                    {
-                        <span class="text-muted">No image</span>
-                    }
-                </td>
-                <td>@item.Title</td>
-                <td>@item.ReleaseDate?.ToString("yyyy-MM-dd")</td>
-                <td>@item.Genre?.Name</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    @foreach (var game in Model)
+    {
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                @if (!string.IsNullOrEmpty(game.ImagePath))
+                {
+                    <img src="@game.ImagePath" class="card-img-top" alt="@game.Title" style="height: 400px; object-fit: cover; border-radius: 8px;" />
+                }
+                else
+                {
+                    <div class="bg-secondary text-white text-center p-5">
+                        No Image
+                    </div>
+                }
+
+                <div class="card-body">
+                    <h5 class="card-title">@game.Title</h5>
+                    <p class="card-text">
+                        <strong>Release:</strong> @game.ReleaseDate?.ToString("yyyy-MM-dd")<br />
+                        <strong>Genre:</strong> @game.Genre?.Name
+                    </p>
+                </div>
+                <div class="card-footer text-center">
+                    <a asp-action="Details" asp-route-id="@game.Id" class="btn btn-sm btn-info me-1">Details</a>
+                    <a asp-action="Edit" asp-route-id="@game.Id" class="btn btn-sm btn-warning me-1">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@game.Id" class="btn btn-sm btn-danger">Delete</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
