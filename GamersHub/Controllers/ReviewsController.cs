@@ -20,17 +20,42 @@ namespace GamersHub.Controllers
             _context = context;
             _userManager = userManager;
         }
+        
 
         // GET: Reviews
-        public async Task<IActionResult> Index()
-        {   
-
-            var reviews = _context.Reviews
+        public async Task<IActionResult> Index(string? searchString, int? genreId)
+        {
+            var reviewsQuery = _context.Reviews
                 .Include(r => r.Game)
-                .Include(r => r.User);
+                .ThenInclude(g => g.Genre)
+                .Include(r => r.User)
+                .AsQueryable();
 
-            return View(await reviews.ToListAsync());
+            // Apply search by game title
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                reviewsQuery = reviewsQuery.Where(r => r.Game.Title.Contains(searchString));
+            }
+
+            // Apply genre filter
+            if (genreId.HasValue && genreId != 0)
+            {
+                reviewsQuery = reviewsQuery.Where(r => r.Game.GenreId == genreId);
+            }
+
+            // Get genre list for dropdown
+            var genres = await _context.Genres.ToListAsync();
+            ViewBag.Genres = new SelectList(genres, "Id", "Name");
+            ViewBag.SearchString = searchString;
+            ViewBag.SelectedGenre = genreId;
+
+            var reviews = await reviewsQuery
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            return View(reviews);
         }
+
 
         // GET: Reviews/Details/5
         public async Task<IActionResult> Details(int? id)
