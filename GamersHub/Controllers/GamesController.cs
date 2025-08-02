@@ -17,13 +17,19 @@ namespace GamersHub.Controllers
         public GamesController(ApplicationDbContext context)
         {
             _context = context;
-        }           
+        }
 
         // GET: Games
-        public async Task<IActionResult> Index(string? searchString)
+        public async Task<IActionResult> Index(string? searchString, int? genreId, int page = 1, int pageSize = 6)
         {
             ViewData["CurrentFilter"] = searchString;
+            ViewData["CurrentGenre"] = genreId;
 
+            // Get all genres for dropdown
+            var genres = await _context.Genres.ToListAsync();
+            ViewBag.Genres = new SelectList(genres, "Id", "Name");
+
+            // Build base query
             var gamesQuery = _context.Games
                 .Include(g => g.Genre)
                 .AsQueryable();
@@ -33,9 +39,30 @@ namespace GamersHub.Controllers
                 gamesQuery = gamesQuery.Where(g => g.Title.Contains(searchString));
             }
 
-            var games = await gamesQuery.ToListAsync();
+            if (genreId != null && genreId != 0)
+            {
+                gamesQuery = gamesQuery.Where(g => g.GenreId == genreId);
+            }
+
+            // Pagination
+            var totalItems = await gamesQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+            var games = await gamesQuery
+                .OrderBy(g => g.Title)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // Pass paging info to view
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.SearchString = searchString;
+            ViewBag.SelectedGenre = genreId;
+
             return View(games);
         }
+
 
         // GET: Games/Details/5
         public async Task<IActionResult> Details(int? id)

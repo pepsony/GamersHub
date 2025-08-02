@@ -2,51 +2,90 @@
 
 @{
     ViewData["Title"] = "Games";
+    var currentPage = (int)(ViewBag.CurrentPage ?? 1);
+    var totalPages = (int)(ViewBag.TotalPages ?? 1);
+    var searchString = (string)ViewBag.SearchString;
+    var selectedGenre = (int?)ViewBag.SelectedGenre;
 }
 
 <h1>Games</h1>
-
-<form asp-action="Index" method="get" class="mb-4">
-    <div class="input-group">
-        <input type="text" name="searchString" value="@Context.Request.Query["searchString"]"
-               class="form-control" placeholder="Search games by title..." />
-        <button type="submit" class="btn btn-outline-secondary">Search</button>
-    </div>
-</form>
 
 <p>
     <a asp-action="Create" class="btn btn-primary mb-3">Create New</a>
 </p>
 
-<div class="row row-cols-1 row-cols-md-3 g-4">
-    @foreach (var game in Model)
-    {
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                @if (!string.IsNullOrEmpty(game.ImagePath))
+<form asp-action="Index" method="get" class="mb-4">
+    <div class="row g-2">
+        <div class="col-md-6">
+            <input type="text" name="searchString" value="@searchString"
+                   class="form-control" placeholder="Search games by title..." />
+        </div>
+        <div class="col-md-4">
+            <select name="genreId" class="form-select">
+                <option value="">All Genres</option>
+                @foreach (var genre in (SelectList)ViewBag.Genres)
                 {
-                    <img src="@game.ImagePath" class="card-img-top" alt="@game.Title" style="height: 400px; object-fit: cover; border-radius: 8px;" />
+                    var selected = selectedGenre == int.Parse(genre.Value) ? "selected" : "";
+                    <option value="@genre.Value" selected>@genre.Text</option>
                 }
-                else
-                {
-                    <div class="bg-secondary text-white text-center p-5">
-                        No Image
-                    </div>
-                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-secondary w-100">Filter</button>
+        </div>
+    </div>
+</form>
 
-                <div class="card-body">
-                    <h5 class="card-title">@game.Title</h5>
-                    <p class="card-text">
-                        <strong>Release:</strong> @game.ReleaseDate?.ToString("yyyy-MM-dd")<br />
-                        <strong>Genre:</strong> @game.Genre?.Name
-                    </p>
-                </div>
-                <div class="card-footer text-center">
-                    <a asp-action="Details" asp-route-id="@game.Id" class="btn btn-sm btn-info me-1">Details</a>
-                    <a asp-action="Edit" asp-route-id="@game.Id" class="btn btn-sm btn-warning me-1">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@game.Id" class="btn btn-sm btn-danger">Delete</a>
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No games found.</div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+        @foreach (var game in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    @if (!string.IsNullOrEmpty(game.ImagePath))
+                    {
+                        <img src="@game.ImagePath" class="card-img-top" alt="@game.Title"
+                             style="height: 400px; object-fit: cover; border-radius: 8px;" />
+                    }
+                    else
+                    {
+                        <div class="bg-secondary text-white text-center p-5">No Image</div>
+                    }
+
+                    <div class="card-body">
+                        <h5 class="card-title">@game.Title</h5>
+                        <p class="card-text">
+                            <strong>Release:</strong> @game.ReleaseDate?.ToString("yyyy-MM-dd")<br />
+                            <strong>Genre:</strong> @game.Genre?.Name
+                        </p>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a asp-action="Details" asp-route-id="@game.Id" class="btn btn-sm btn-info me-1">Details</a>
+                        <a asp-action="Edit" asp-route-id="@game.Id" class="btn btn-sm btn-warning me-1">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@game.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </div>
                 </div>
             </div>
-        </div>
-    }
-</div>
+        }
+    </div>
+
+    <!-- Pagination Controls -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                var routeValues = new { page = i, searchString = searchString, genreId = selectedGenre };
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@i"
+                       asp-route-searchString="@searchString"
+                       asp-route-genreId="@selectedGenre">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
