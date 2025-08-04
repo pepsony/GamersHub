@@ -13,14 +13,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// TEST!!!!!!!!!!!!!
-
 // Register Identity with roles
 builder.Services
     .AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
-    .AddRoles<IdentityRole>() // if you want roles
+    .AddRoles<IdentityRole>() // <-- This enables roles
     .AddEntityFrameworkStores<ApplicationDbContext>();
-
 
 // Add both MVC and Razor Pages (required for Identity UI)
 builder.Services.AddControllersWithViews();

@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace GamersHub.Controllers
-{
+{   
     public class PlatformsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -27,6 +27,7 @@ namespace GamersHub.Controllers
         }
 
         // GET: Platforms/Details/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -45,7 +46,7 @@ namespace GamersHub.Controllers
         }
 
         // GET: Platforms/Create
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
@@ -54,6 +55,7 @@ namespace GamersHub.Controllers
         // POST: Platforms/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name")] Platform platform)
@@ -68,7 +70,7 @@ namespace GamersHub.Controllers
         }
 
         // GET: Platforms/Edit/5
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -87,7 +89,7 @@ namespace GamersHub.Controllers
         // POST: Platforms/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Platform platform)
@@ -121,7 +123,7 @@ namespace GamersHub.Controllers
         }
 
         // GET: Platforms/Delete/5
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -140,7 +142,7 @@ namespace GamersHub.Controllers
         }
 
         // POST: Platforms/Delete/5
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
