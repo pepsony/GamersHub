@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using GamersHub.Data;
+using GamersHub.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using GamersHub.Data;
-using GamersHub.Models;
-using Microsoft.AspNetCore.Identity;
 
 namespace GamersHub.Controllers
 {
@@ -58,6 +59,7 @@ namespace GamersHub.Controllers
 
 
         // GET: Reviews/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -71,6 +73,7 @@ namespace GamersHub.Controllers
         }
 
         // GET: Reviews/Create
+        [Authorize]
         public IActionResult Create()
         {
             ViewData["GameId"] = new SelectList(_context.Games, "Id", "Title");
@@ -78,6 +81,7 @@ namespace GamersHub.Controllers
         }
 
         // POST: Reviews/Create
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("GameId,Content,Rating")] Review review)
@@ -119,6 +123,7 @@ namespace GamersHub.Controllers
         }
 
         // GET: Reviews/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -137,9 +142,10 @@ namespace GamersHub.Controllers
             return View(review);
         }
 
-       
+
 
         // POST: Reviews/Edit/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,GameId,Content,Rating,CreatedAt")] Review review)
@@ -190,6 +196,7 @@ namespace GamersHub.Controllers
         }
 
         // GET: Reviews/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -203,6 +210,7 @@ namespace GamersHub.Controllers
         }
 
         // POST: Reviews/Delete/5
+        [Authorize]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
