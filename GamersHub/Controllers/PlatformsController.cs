@@ -27,7 +27,7 @@ namespace GamersHub.Controllers
         }
 
         // GET: Platforms/Details/5
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)

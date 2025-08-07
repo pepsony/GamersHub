@@ -9,7 +9,10 @@
 <h1>Reviews</h1>
 
 <p>
-    <a asp-action="Create" class="btn btn-primary mb-3">Create New</a>
+    @if (User.Identity.IsAuthenticated)
+    {
+        <a asp-action="Create" class="btn btn-primary mb-3">Create New</a>
+    }
 </p>
 
 <form asp-action="Index" method="get" class="mb-4">
@@ -72,9 +75,12 @@ else
                     <td>@item.User?.NormalizedUserName</td>
                     <td>@item.CreatedAt.ToString("yyyy-MM-dd")</td>
                     <td>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
                         <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                        }
                     </td>
                 </tr>
             }
