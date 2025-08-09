@@ -1,8 +1,7 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using GamersHub.Data;
 using GamersHub.Models;
+using GamersHub.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,50 +12,34 @@ namespace GamersHub.Controllers
 {
     public class ReviewsController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IReviewService _reviewService;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public ReviewsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public ReviewsController(IReviewService reviewService, UserManager<ApplicationUser> userManager)
         {
-            _context = context;
+            _reviewService = reviewService;
             _userManager = userManager;
         }
-        
 
         // GET: Reviews
         public async Task<IActionResult> Index(string? searchString, int? genreId)
         {
-            var reviewsQuery = _context.Reviews
-                .Include(r => r.Game)
-                .ThenInclude(g => g.Genre)
-                .Include(r => r.User)
-                .AsQueryable();
+            var reviews = await _reviewService.GetAllReviewsAsync(searchString, genreId);
 
-            // Apply search by game title
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                reviewsQuery = reviewsQuery.Where(r => r.Game.Title.Contains(searchString));
-            }
+            // Get genres for filter dropdown - for this, still access DbContext via UserManager or inject DbContext if needed
+            // But better to inject a service to get genres or use ViewComponent
+            // For simplicity, assume genres loaded here from context:
+            var context = HttpContext.RequestServices.GetService(typeof(ApplicationDbContext)) as ApplicationDbContext;
+            var genres = context != null
+                ? await context.Genres.ToListAsync()
+                : new List<Genre>();
 
-            // Apply genre filter
-            if (genreId.HasValue && genreId != 0)
-            {
-                reviewsQuery = reviewsQuery.Where(r => r.Game.GenreId == genreId);
-            }
-
-            // Get genre list for dropdown
-            var genres = await _context.Genres.ToListAsync();
             ViewBag.Genres = new SelectList(genres, "Id", "Name");
             ViewBag.SearchString = searchString;
             ViewBag.SelectedGenre = genreId;
 
-            var reviews = await reviewsQuery
-                .OrderByDescending(r => r.CreatedAt)
-                .ToListAsync();
-
             return View(reviews);
         }
-
 
         // GET: Reviews/Details/5
         [Authorize]
@@ -64,19 +47,23 @@ namespace GamersHub.Controllers
         {
             if (id == null) return NotFound();
 
-            var review = await _context.Reviews
-                .Include(r => r.Game)
-                .Include(r => r.User)
-                .FirstOrDefaultAsync(r => r.Id == id);
+            var review = await _reviewService.GetReviewByIdAsync(id.Value);
 
-            return review == null ? NotFound() : View(review);
+            if (review == null) return NotFound();
+
+            return View(review);
         }
 
         // GET: Reviews/Create
         [Authorize]
         public IActionResult Create()
         {
-            ViewData["GameId"] = new SelectList(_context.Games, "Id", "Title");
+            // Populate games dropdown list
+            var games = HttpContext.RequestServices.GetService(typeof(ApplicationDbContext)) is ApplicationDbContext ctx
+                ? ctx.Games.ToList()
+                : new List<Game>();
+
+            ViewData["GameId"] = new SelectList(games, "Id", "Title");
             return View();
         }
 
@@ -87,39 +74,24 @@ namespace GamersHub.Controllers
         public async Task<IActionResult> Create([Bind("GameId,Content,Rating")] Review review)
         {
             var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-            if (string.IsNullOrEmpty(userId))
+            if (!ModelState.IsValid)
             {
-                return Unauthorized(); // Ensure the user is authenticated
+                ViewData["GameId"] = new SelectList(GetGamesForDropdown(), "Id", "Title", review.GameId);
+                return View(review);
             }
 
-            // Check for duplicate review
-            bool alreadyReviewed = await _context.Reviews
-                .AnyAsync(r => r.UserId == userId && r.GameId == review.GameId);
+            bool created = await _reviewService.CreateReviewAsync(review, userId);
 
-            if (alreadyReviewed)
+            if (!created)
             {
                 ModelState.AddModelError("", "You have already reviewed this game.");
+                ViewData["GameId"] = new SelectList(GetGamesForDropdown(), "Id", "Title", review.GameId);
+                return View(review);
             }
 
-            if (ModelState.IsValid)
-            {
-                review.UserId = userId;
-                review.CreatedAt = DateTime.UtcNow;
-
-                _context.Add(review);
-                var result = await _context.SaveChangesAsync();
-
-                if (result > 0)
-                {
-                    return RedirectToAction(nameof(Index));
-                }
-
-                ModelState.AddModelError("", "Something went wrong while saving the review.");
-            }
-
-            ViewData["GameId"] = new SelectList(_context.Games, "Id", "Title", review.GameId);
-            return View(review);
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Reviews/Edit/5
@@ -128,21 +100,11 @@ namespace GamersHub.Controllers
         {
             if (id == null) return NotFound();
 
-            var review = await _context.Reviews
-                .Include(r => r.User)
-                .Include(r => r.Game)
-                .FirstOrDefaultAsync(r => r.Id == id);
-
+            var review = await _reviewService.GetReviewByIdAsync(id.Value);
             if (review == null) return NotFound();
 
-            // No longer need these selectLists for our read-only fields
-            //ViewData["GameId"] = new SelectList(_context.Games, "Id", "Title", review.GameId);
-            //ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", review.UserId);
-            
             return View(review);
         }
-
-
 
         // POST: Reviews/Edit/5
         [Authorize]
@@ -150,49 +112,19 @@ namespace GamersHub.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,GameId,Content,Rating,CreatedAt")] Review review)
         {
-            if (id != review.Id)
-            {
-                return NotFound();
-            }
+            if (id != review.Id) return NotFound();
 
             if (!ModelState.IsValid)
             {
-                ViewData["GameId"] = new SelectList(_context.Games, "Id", "Title", review.GameId);
-                ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", review.UserId);
+                ViewData["GameId"] = new SelectList(GetGamesForDropdown(), "Id", "Title", review.GameId);
+                ViewData["UserId"] = new SelectList(GetUsersForDropdown(), "Id", "UserName", review.UserId);
                 return View(review);
             }
 
-            try
-            {
-                var existingReview = await _context.Reviews.FindAsync(id);
-                if (existingReview == null)
-                {
-                    return NotFound();
-                }
+            var updated = await _reviewService.UpdateReviewAsync(review);
+            if (!updated) return NotFound();
 
-                // Update all relevant properties
-                existingReview.UserId = review.UserId;
-                existingReview.GameId = review.GameId;
-                existingReview.Content = review.Content;
-                existingReview.Rating = review.Rating;
-                existingReview.CreatedAt = review.CreatedAt;
-
-                _context.Update(existingReview);
-                await _context.SaveChangesAsync();
-
-                return RedirectToAction(nameof(Index));
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ReviewExists(review.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Reviews/Delete/5
@@ -201,12 +133,10 @@ namespace GamersHub.Controllers
         {
             if (id == null) return NotFound();
 
-            var review = await _context.Reviews
-                .Include(r => r.Game)
-                .Include(r => r.User)
-                .FirstOrDefaultAsync(r => r.Id == id);
+            var review = await _reviewService.GetReviewByIdAsync(id.Value);
+            if (review == null) return NotFound();
 
-            return review == null ? NotFound() : View(review);
+            return View(review);
         }
 
         // POST: Reviews/Delete/5
@@ -215,19 +145,23 @@ namespace GamersHub.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var review = await _context.Reviews.FindAsync(id);
-            if (review != null)
-            {
-                _context.Reviews.Remove(review);
-                await _context.SaveChangesAsync();
-            }
-
+            await _reviewService.DeleteReviewAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
-        private bool ReviewExists(int id)
+        // Helpers to get dropdown data
+        private IEnumerable<Game> GetGamesForDropdown()
         {
-            return _context.Reviews.Any(e => e.Id == id);
+            return HttpContext.RequestServices.GetService(typeof(ApplicationDbContext)) is ApplicationDbContext ctx
+                ? ctx.Games.ToList()
+                : new List<Game>();
+        }
+
+        private IEnumerable<ApplicationUser> GetUsersForDropdown()
+        {
+            return HttpContext.RequestServices.GetService(typeof(ApplicationDbContext)) is ApplicationDbContext ctx
+                ? ctx.Users.ToList()
+                : new List<ApplicationUser>();
         }
     }
 }
