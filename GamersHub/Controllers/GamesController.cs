@@ -17,6 +17,13 @@ namespace GamersHub.Controllers
         private readonly IGameService _gameService;
         private readonly ApplicationDbContext _context; // only for genres
 
+        //This is for 500 error test!!!
+        public IActionResult ThrowError()
+        {
+            throw new Exception("Test 500 error page");
+        }
+        // To check that in the field add: localhost:7234/Games/ThrowError in Production state
+
         public GamesController(IGameService gameService, ApplicationDbContext context)
         {
             _gameService = gameService;

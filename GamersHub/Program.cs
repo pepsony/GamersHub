@@ -24,11 +24,13 @@ builder.Services
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+// Register Application Services (Dependency Injection)
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IPlatformService, PlatformService>();
 
+// Cofigure Cookies
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
@@ -39,17 +41,20 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline / Error handling + Middleware pipeline /
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
 }
 else
 {
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see
-    // https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    // Handle 500 Internal Server Errors
+    app.UseExceptionHandler("/Error/ServerError");
+
+    // Handle 404 and other status codes
+    app.UseStatusCodePagesWithReExecute("/Error/StatusCode/{0}");
+
+    app.UseHsts(); // Force HTTPS
 }
 
 app.UseHttpsRedirection();
@@ -75,7 +80,7 @@ app.MapControllerRoute(
 // Identity UI uses Razor Pages (login, register, etc.)
 app.MapRazorPages();
 
-// Run the seeder
+// Run the database seeder
 await DbInitializer.SeedAsync(app.Services);
 
 
