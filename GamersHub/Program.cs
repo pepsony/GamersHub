@@ -20,11 +20,13 @@ builder.Services
     .AddRoles<IdentityRole>() // <-- This enables roles
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-builder.Services.AddScoped<IGameService, GameService>();
-
 // Add both MVC and Razor Pages (required for Identity UI)
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+builder.Services.AddScoped<IGameService, GameService>();
+builder.Services.AddScoped<IGenreService, GenreService>();
+builder.Services.AddScoped<IPlatformService, PlatformService>();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {

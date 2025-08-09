@@ -1,46 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using GamersHub.Data;
+﻿using System.Threading.Tasks;
 using GamersHub.Models;
+using GamersHub.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace GamersHub.Controllers
-{   
+{
     public class PlatformsController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IPlatformService _platformService;
 
-        public PlatformsController(ApplicationDbContext context)
+        public PlatformsController(IPlatformService platformService)
         {
-            _context = context;
+            _platformService = platformService;
         }
 
         // GET: Platforms
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Platforms.ToListAsync());
+            var platforms = await _platformService.GetAllAsync();
+            return View(platforms);
         }
 
         // GET: Platforms/Details/5
         [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var platform = await _context.Platforms
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (platform == null)
-            {
-                return NotFound();
-            }
+            var platform = await _platformService.GetByIdAsync(id.Value);
+            if (platform == null) return NotFound();
 
             return View(platform);
         }
@@ -53,8 +42,6 @@ namespace GamersHub.Controllers
         }
 
         // POST: Platforms/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -62,8 +49,7 @@ namespace GamersHub.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(platform);
-                await _context.SaveChangesAsync();
+                await _platformService.CreateAsync(platform);
                 return RedirectToAction(nameof(Index));
             }
             return View(platform);
@@ -73,49 +59,34 @@ namespace GamersHub.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var platform = await _context.Platforms.FindAsync(id);
-            if (platform == null)
-            {
-                return NotFound();
-            }
+            var platform = await _platformService.GetByIdAsync(id.Value);
+            if (platform == null) return NotFound();
+
             return View(platform);
         }
 
         // POST: Platforms/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Platform platform)
         {
-            if (id != platform.Id)
-            {
-                return NotFound();
-            }
+            if (id != platform.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(platform);
-                    await _context.SaveChangesAsync();
+                    await _platformService.UpdateAsync(platform);
                 }
-                catch (DbUpdateConcurrencyException)
+                catch
                 {
-                    if (!PlatformExists(platform.Id))
-                    {
+                    if (!await _platformService.ExistsAsync(platform.Id))
                         return NotFound();
-                    }
                     else
-                    {
                         throw;
-                    }
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -126,17 +97,10 @@ namespace GamersHub.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var platform = await _context.Platforms
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (platform == null)
-            {
-                return NotFound();
-            }
+            var platform = await _platformService.GetByIdAsync(id.Value);
+            if (platform == null) return NotFound();
 
             return View(platform);
         }
@@ -147,19 +111,8 @@ namespace GamersHub.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var platform = await _context.Platforms.FindAsync(id);
-            if (platform != null)
-            {
-                _context.Platforms.Remove(platform);
-            }
-
-            await _context.SaveChangesAsync();
+            await _platformService.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool PlatformExists(int id)
-        {
-            return _context.Platforms.Any(e => e.Id == id);
         }
     }
 }
