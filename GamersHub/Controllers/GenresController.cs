@@ -1,29 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using GamersHub.Data;
+﻿using System.Threading.Tasks;
 using GamersHub.Models;
+using GamersHub.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace GamersHub.Controllers
 {
     public class GenresController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IGenreService _genreService;
 
-        public GenresController(ApplicationDbContext context)
+        public GenresController(IGenreService genreService)
         {
-            _context = context;
+            _genreService = genreService;
         }
 
         // GET: Genres
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Genres.ToListAsync());
+            var genres = await _genreService.GetAllAsync();
+            return View(genres);
         }
 
         // GET: Genres/Details/5
@@ -31,16 +27,11 @@ namespace GamersHub.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var genre = await _context.Genres
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var genre = await _genreService.GetByIdAsync(id.Value);
             if (genre == null)
-            {
                 return NotFound();
-            }
 
             return View(genre);
         }
@@ -53,8 +44,6 @@ namespace GamersHub.Controllers
         }
 
         // POST: Genres/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -62,8 +51,7 @@ namespace GamersHub.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(genre);
-                await _context.SaveChangesAsync();
+                await _genreService.CreateAsync(genre);
                 return RedirectToAction(nameof(Index));
             }
             return View(genre);
@@ -74,48 +62,36 @@ namespace GamersHub.Controllers
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var genre = await _context.Genres.FindAsync(id);
+            var genre = await _genreService.GetByIdAsync(id.Value);
             if (genre == null)
-            {
                 return NotFound();
-            }
+
             return View(genre);
         }
 
         // POST: Genres/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Genre genre)
         {
             if (id != genre.Id)
-            {
                 return NotFound();
-            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(genre);
-                    await _context.SaveChangesAsync();
+                    await _genreService.UpdateAsync(genre);
                 }
-                catch (DbUpdateConcurrencyException)
+                catch
                 {
-                    if (!GenreExists(genre.Id))
-                    {
+                    if (!await _genreService.ExistsAsync(genre.Id))
                         return NotFound();
-                    }
                     else
-                    {
                         throw;
-                    }
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -127,16 +103,11 @@ namespace GamersHub.Controllers
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var genre = await _context.Genres
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var genre = await _genreService.GetByIdAsync(id.Value);
             if (genre == null)
-            {
                 return NotFound();
-            }
 
             return View(genre);
         }
@@ -147,19 +118,8 @@ namespace GamersHub.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var genre = await _context.Genres.FindAsync(id);
-            if (genre != null)
-            {
-                _context.Genres.Remove(genre);
-            }
-
-            await _context.SaveChangesAsync();
+            await _genreService.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool GenreExists(int id)
-        {
-            return _context.Genres.Any(e => e.Id == id);
         }
     }
 }
