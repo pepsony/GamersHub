@@ -47,5 +47,10 @@
 </div>
 
 <div>
-    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    <a asp-action="Index"
+       asp-route-page="@ViewBag.Page"
+       asp-route-searchString="@ViewBag.SearchString"
+       asp-route-genreId="@ViewBag.SelectedGenre"
+       class="btn btn-secondary">
+       Back to List</a>
 </div>

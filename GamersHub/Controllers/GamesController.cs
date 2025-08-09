@@ -45,10 +45,19 @@ namespace GamersHub.Controllers
             return View(games);
         }
 
-        public async Task<IActionResult> Details(int id)
+        public async Task<IActionResult> Details(int id, int? page, string searchString, int? genreId)
         {
-            var game = await _gameService.GetByIdAsync(id);
-            if (game == null) return NotFound();
+            var game = await _context.Games
+                .Include(g => g.Genre)  // if you want genre details
+                .FirstOrDefaultAsync(g => g.Id == id);
+
+            if (game == null)
+                return NotFound();
+
+            ViewBag.Page = page ?? 1;
+            ViewBag.SearchString = searchString;
+            ViewBag.SelectedGenre = genreId;
+
             return View(game);
         }
 

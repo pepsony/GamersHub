@@ -26,12 +26,8 @@
         <div class="col-md-4">
             <select name="genreId" class="form-select">
                 <option value="">All Genres</option>
-                @* @foreach (var genre in (SelectList)ViewBag.Genres)
-                {
-                    var selected = selectedGenre == int.Parse(genre.Value) ? "selected" : "";
-                    <option value="@genre.Value" selected>@genre.Text</option>
-                } *@
-                @* To set genre dropdown on All Genre *@
+               
+                @* To set genre dropdown on "All Genre" *@
                 @foreach (var genre in (SelectList)ViewBag.Genres)
                 {
                     var isSelected = selectedGenre.HasValue && selectedGenre.Value == int.Parse(genre.Value);
@@ -61,14 +57,22 @@ else
                 <div class="card h-100 shadow-sm">
                     @if (!string.IsNullOrEmpty(game.ImagePath))
                     {
-                        <a asp-action="Details" asp-route-id="@game.Id">
+                        <a asp-action="Details" 
+                           asp-route-id="@game.Id"
+                           asp-route-page="@currentPage"
+                           asp-route-searchString="@searchString"
+                           asp-route-genreId="@selectedGenre">
                             <img src="@game.ImagePath" class="card-img-top" alt="@game.Title"
                                  style="height: 400px; object-fit: cover; border-radius: 8px; cursor: pointer;" />
                         </a>
                     }
                     else
                     {
-                        <a asp-action="Details" asp-route-id="@game.Id">
+                        <a asp-action="Details" 
+                            asp-route-id="@game.Id"
+                           asp-route-page="@currentPage"
+                           asp-route-searchString="@searchString"
+                           asp-route-genreId="@selectedGenre">
                             <div class="bg-secondary text-white text-center p-5" style="cursor: pointer;">
                                 No Image
                             </div>
@@ -85,7 +89,12 @@ else
                     <div class="card-footer text-center">
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <a asp-action="Details" asp-route-id="@game.Id" class="btn btn-sm btn-info me-1">Details</a>
+                            <a asp-action="Details" 
+                                asp-route-id="@game.Id"
+                                asp-route-page="@currentPage"
+                                asp-route-searchString="@searchString"
+                                asp-route-genreId="@selectedGenre"
+                                class="btn btn-sm btn-info me-1">Details</a>
                             <a asp-action="Edit" asp-route-id="@game.Id" class="btn btn-sm btn-warning me-1">Edit</a>
                             <a asp-action="Delete" asp-route-id="@game.Id" class="btn btn-sm btn-danger">Delete</a>
                         }
