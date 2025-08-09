@@ -5,6 +5,7 @@ using GamersHub.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Generic;
 
 namespace GamersHub.Data
 {
@@ -21,7 +22,9 @@ namespace GamersHub.Data
             // Apply pending migrations
             await context.Database.MigrateAsync();
 
+            
             // Seed roles
+            
             string[] roles = { "Admin", "User" };
             foreach (var role in roles)
             {
@@ -31,7 +34,9 @@ namespace GamersHub.Data
                 }
             }
 
+            
             // Seed default admin user
+            
             var adminEmail = "admin@abv.bg";
             var adminPassword = "Admin123!";
 
@@ -52,7 +57,9 @@ namespace GamersHub.Data
                 }
             }
 
+            
             // Seed Genres
+            
             if (!context.Genres.Any())
             {
                 context.Genres.AddRange(
@@ -67,7 +74,9 @@ namespace GamersHub.Data
                 await context.SaveChangesAsync();
             }
 
+            
             // Seed Platforms
+            
             if (!context.Platforms.Any())
             {
                 context.Platforms.AddRange(
@@ -80,18 +89,25 @@ namespace GamersHub.Data
                 await context.SaveChangesAsync();
             }
 
-            // Seed a demo game
-            if (!context.Games.Any())
+            
+            // Helper - method to seed a game
+            
+            async Task SeedGameAsync(string title, string genreName, DateTime releaseDate)
             {
-                var genre = await context.Genres.FirstOrDefaultAsync(g => g.Name == "RPG");
-
-                if (genre != null)
+                if (!await context.Games.AnyAsync(g => g.Title == title))
                 {
+                    var genre = await context.Genres.FirstOrDefaultAsync(g => g.Name == genreName);
+                    if (genre == null)
+                    {
+                        Console.WriteLine($"Genre '{genreName}' not found — skipping '{title}'.");
+                        return;
+                    }
+
                     var game = new Game
                     {
-                        Title = "Elder Scrolls VI",
+                        Title = title,
                         GenreId = genre.Id,
-                        ReleaseDate = new DateTime(2026, 1, 1)
+                        ReleaseDate = releaseDate
                     };
 
                     context.Games.Add(game);
@@ -106,14 +122,30 @@ namespace GamersHub.Data
                             PlatformId = p.Id
                         });
                     }
-
                     await context.SaveChangesAsync();
-                }
-                else
-                {
-                    Console.WriteLine("Genre 'RPG' not found — skipping game seeding.");
+
+                    Console.WriteLine($"Seeded game: {title}");
                 }
             }
+
+            
+            // Seed 15 Games
+            
+            await SeedGameAsync("Elder Scrolls VI", "RPG", new DateTime(2026, 1, 1));
+            await SeedGameAsync("Cyberpunk 2078", "RPG", new DateTime(2028, 5, 10));
+            await SeedGameAsync("Halo Infinite 2", "Shooter", new DateTime(2027, 9, 20));
+            await SeedGameAsync("Mass Effect 5", "RPG", new DateTime(2027, 3, 15));
+            await SeedGameAsync("The Witcher 4", "RPG", new DateTime(2026, 11, 5));
+            await SeedGameAsync("Half-Life 3", "Shooter", new DateTime(2025, 12, 1));
+            await SeedGameAsync("GTA VI", "Action", new DateTime(2025, 10, 15));
+            await SeedGameAsync("Red Dead Redemption 3", "Action", new DateTime(2029, 4, 18));
+            await SeedGameAsync("Metroid Prime 5", "Adventure", new DateTime(2026, 6, 30));
+            await SeedGameAsync("Zelda: Breath of the Wild 3", "Adventure", new DateTime(2028, 9, 1));
+            await SeedGameAsync("Forza Horizon 6", "Simulation", new DateTime(2025, 11, 22));
+            await SeedGameAsync("Gran Turismo 8", "Simulation", new DateTime(2026, 7, 15));
+            await SeedGameAsync("Stardew Valley 2", "Indie", new DateTime(2025, 8, 5));
+            await SeedGameAsync("Hades II", "Indie", new DateTime(2025, 12, 25));
+            await SeedGameAsync("Starfield 2", "RPG", new DateTime(2029, 1, 10));
         }
     }
 }
