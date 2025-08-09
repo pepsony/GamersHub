@@ -1,5 +1,6 @@
 using GamersHub.Data;
 using GamersHub.Models;
+using GamersHub.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,8 @@ builder.Services
     .AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole>() // <-- This enables roles
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.AddScoped<IGameService, GameService>();
 
 // Add both MVC and Razor Pages (required for Identity UI)
 builder.Services.AddControllersWithViews();

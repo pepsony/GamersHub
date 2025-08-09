@@ -24,10 +24,18 @@
         <div class="col-md-4">
             <select name="genreId" class="form-select">
                 <option value="">All Genres</option>
-                @foreach (var genre in (SelectList)ViewBag.Genres)
+                @* @foreach (var genre in (SelectList)ViewBag.Genres)
                 {
                     var selected = (selectedGenre.HasValue && genre.Value == selectedGenre.ToString()) ? "selected" : "";
                     <option value="@genre.Value" selected>@genre.Text</option>
+                } *@
+                @* To set genre dropdown on All Genre *@
+                @foreach (var genre in (SelectList)ViewBag.Genres)
+                {
+                    var isSelected = selectedGenre.HasValue && selectedGenre.Value == int.Parse(genre.Value);
+                    <option value="@genre.Value" selected="@(isSelected ? "selected" : null)">
+                        @genre.Text
+                    </option>
                 }
             </select>
         </div>

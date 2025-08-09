@@ -9,7 +9,7 @@ namespace GamersHub.Models
         public ICollection<Review> Reviews { get; set; }
 
 
-        // Optional for navigation (if you want both sides clearly)
+        // Optional for navigation (additional feature)
         public ICollection<Follower> Followers { get; set; }  // People who follow me
         public ICollection<Follower> Following { get; set; }  // People I follow
     }
